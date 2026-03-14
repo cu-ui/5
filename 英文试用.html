@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUMINA AI</title>
+  <!-- 引入核心资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+  <!-- 自定义Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            lumina: {
+              50: '#fafafa',
+              100: '#f5f5f5',
+              200: '#e5e5e5',
+              300: '#d4d4d4',
+              400: '#a3a3a3',
+              500: '#737373',
+              600: '#525252',
+              700: '#404040',
+              800: '#262626',
+              900: '#171717',
+              950: '#0a0a0a',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'SF Pro Display', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      /* 玻璃拟态 */
+      .glass-dark {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .glass-light {
+        background: rgba(0, 0, 0, 0.06);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .glass {
+        @apply glass-dark dark:glass-light;
+      }
+      /* 图标悬浮动效 */
+      .app-hover {
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .app-hover:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.15);
+      }
+      .app-hover:active {
+        transform: translateY(0) scale(0.98);
+      }
+      /* 背景噪点 */
+      .bg-noise {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        background-blend-mode: overlay;
+        opacity: 0.03;
+      }
+      /* 文本渐变 */
+      .text-gradient-dark {
+        background: linear-gradient(135deg, #f5f5f5 0%, #a3a3a3 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .text-gradient-light {
+        background: linear-gradient(135deg, #171717 0%, #525252 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .text-gradient {
+        @apply text-gradient-dark dark:text-gradient-light;
+      }
+      /* 全局过渡 */
+      .theme-transition {
+        transition: all 0.3s ease-in-out;
+      }
+      /* 红色删除按钮 */
+      .btn-danger {
+        background-color: #dc2626;
+        color: white;
+        font-weight: bold;
+        border: 2px solid #b91c1c;
+      }
+      .btn-danger:hover {
+        background-color: #b91c1c;
+      }
+      .dark .btn-danger {
+        background-color: #ef4444;
+        border-color: #dc2626;
+        color: white;
+      }
+
+      /* ---------- 深色模式弹窗黑金质感（仅黑色状态生效） ---------- */
+      body:not(.dark) #add-character-modal > div,
+      body:not(.dark) #edit-character-modal > div,
+      body:not(.dark) #add-moment-modal > div {
+        border: 1px solid #D4AF37 !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(212, 175, 55, 0.3) inset !important;
+      }
+      body:not(.dark) #add-character-modal h3,
+      body:not(.dark) #edit-character-modal h3,
+      body:not(.dark) #add-moment-modal h3 {
+        color: #f0e6d2 !important;
+        letter-spacing: 0.02em;
+      }
+      /* 输入框 & 文本域 */
+      body:not(.dark) #add-character-modal input,
+      body:not(.dark) #add-character-modal textarea,
+      body:not(.dark) #edit-character-modal input,
+      body:not(.dark) #edit-character-modal textarea,
+      body:not(.dark) #add-moment-modal textarea {
+        background-color: #0d0d0d !important;
+        border: 1px solid #B59449 !important;
+        color: #fff !important;
+      }
+      body:not(.dark) #add-character-modal input:focus,
+      body:not(.dark) #add-character-modal textarea:focus,
+      body:not(.dark) #edit-character-modal input:focus,
+      body:not(.dark) #edit-character-modal textarea:focus,
+      body:not(.dark) #add-moment-modal textarea:focus {
+        border-color: #e6c35c !important;
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25) !important;
+        outline: none;
+      }
+      /* 头像预览金圈 */
+      body:not(.dark) #character-avatar-preview,
+      body:not(.dark) #edit-avatar-preview {
+        border: 2px solid #D4AF37 !important;
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3) !important;
+      }
+      /* 主按钮（保存/创建/发布） */
+      body:not(.dark) #save-character-btn,
+      body:not(.dark) #save-edit-character,
+      body:not(.dark) #save-moment-btn {
+        background: #ffffff !important;
+        border: 1px solid #D4AF37 !important;
+        color: #0a0a0a !important;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3) !important;
+      }
+      body:not(.dark) #save-character-btn:hover,
+      body:not(.dark) #save-edit-character:hover,
+      body:not(.dark) #save-moment-btn:hover {
+        background: #f2f2f2 !important;
+        border-color: #e6c35c !important;
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5) !important;
+      }
+      /* 次按钮（取消） */
+      body:not(.dark) #close-character-modal,
+      body:not(.dark) #close-edit-modal,
+      body:not(.dark) #close-moment-modal {
+        border: 1px solid #D4AF37 !important;
+        color: #D4AF37 !important;
+        background: transparent !important;
+      }
+      body:not(.dark) #close-character-modal:hover,
+      body:not(.dark) #close-edit-modal:hover,
+      body:not(.dark) #close-moment-modal:hover {
+        background: rgba(212, 175, 55, 0.1) !important;
+        border-color: #e6c35c !important;
+        color: #e6c35c !important;
+      }
+      /* 删除按钮（红色保留，加金边点缀） */
+      body:not(.dark) #delete-character-btn {
+        border: 1px solid #D4AF37 !important;
+        background-color: #b91c1c !important;
+        box-shadow: 0 2px 8px rgba(185, 28, 28, 0.4) !important;
+      }
+      body:not(.dark) #delete-character-btn:hover {
+        background-color: #a00f0f !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-lumina-950 dark:bg-white font-sans min-h-screen flex items-center justify-center p-4 m-0 overflow-hidden theme-transition">
+  <!-- 背景氛围 -->
+  <div class="fixed inset-0 bg-gradient-to-br from-lumina-900/80 via-lumina-950 to-black dark:from-white dark:via-lumina-50 dark:to-lumina-100 z-0 theme-transition"></div>
+  <div class="fixed inset-0 bg-noise z-0 pointer-events-none"></div>
+
+  <!-- 手机主体 -->
+  <div id="phone" class="relative w-full max-w-[375px] h-[667px] rounded-[40px] overflow-hidden shadow-2xl z-10 border border-lumina-800 dark:border-lumina-200 theme-transition">
+    <!-- 手机背景 -->
+    <div class="absolute inset-0 bg-gradient-to-br from-lumina-900/80 via-lumina-950 to-black dark:from-white dark:via-lumina-50 dark:to-lumina-100 z-0 theme-transition"></div>
+    <div class="absolute inset-0 bg-noise z-0 pointer-events-none"></div>
+
+    <!-- ====================== 主屏 - 严格正方形布局 ====================== -->
+    <div id="home-screen" class="absolute inset-0 z-10 flex flex-col">
+      <!-- 顶部状态栏 -->
+      <div class="w-full px-8 py-4 flex items-center justify-between z-20">
+        <span id="time" class="text-white dark:text-lumina-950 font-medium text-sm tracking-wide theme-transition">12:00</span>
+        <div class="flex items-center gap-3 text-white dark:text-lumina-950 theme-transition">
+          <!-- 黑白模式切换 -->
+          <button id="theme-toggle" class="text-lg app-hover">
+            <i id="theme-icon" class="ri-sun-fill"></i>
+          </button>
+          <!-- 状态栏图标 -->
+          <i class="ri-wifi-fill text-xs"></i>
+          <i class="ri-signal-5-fill text-xs"></i>
+          <i class="ri-battery-3-fill text-xs"></i>
+        </div>
+      </div>
+
+      <!-- 品牌标题 - 可自定义修改 -->
+      <div class="px-8 py-2">
+        <h1 id="custom-title" class="text-gradient text-[28px] font-bold tracking-tight cursor-default" title="双击修改标题">LUMINA</h1>
+        <p class="text-lumina-400 dark:text-lumina-500 text-xs font-medium tracking-[0.2em] uppercase mt-0.5 theme-transition">Intelligent Companion</p>
+      </div>
+
+      <!-- 核心内容区 - 严格正方形网格 -->
+      <div class="flex-1 px-6 py-6 flex flex-col gap-5">
+        <!-- 第一行：2x2小正方形APP + 大正方形图片区 -->
+        <div class="grid grid-cols-4 gap-4 w-full">
+          <!-- 左侧2x2 小正方形APP 严格1:1 -->
+          <div class="col-span-2 grid grid-cols-2 grid-rows-2 gap-4">
+            <!-- 1. AI对话 小正方形 -->
+            <div id="chat-btn" class="glass app-hover rounded-2xl aspect-square flex flex-col items-center justify-center text-white dark:text-lumina-950 gap-1 theme-transition">
+              <i class="ri-wechat-2-fill text-xl"></i>
+              <span class="text-[9px] font-medium tracking-wide uppercase">Chat</span>
+            </div>
+            <!-- 2. 人设库 小正方形 -->
+            <div id="character-btn" class="glass app-hover rounded-2xl aspect-square flex flex-col items-center justify-center text-white dark:text-lumina-950 gap-1 theme-transition">
+              <i class="ri-user-heart-fill text-xl"></i>
+              <span class="text-[9px] font-medium tracking-wide uppercase">Character</span>
+            </div>
+            <!-- 3. AI朋友圈 小正方形 -->
+            <div id="moment-btn" class="glass app-hover rounded-2xl aspect-square flex flex-col items-center justify-center text-white dark:text-lumina-950 gap-1 theme-transition">
+              <i class="ri-compass-fill text-xl"></i>
+              <span class="text-[9px] font-medium tracking-wide uppercase">Moments</span>
+            </div>
+            <!-- 4. 图片生成 小正方形 -->
+            <div class="glass app-hover rounded-2xl aspect-square flex flex-col items-center justify-center text-white dark:text-lumina-950 gap-1 theme-transition">
+              <i class="ri-image-edit-fill text-xl"></i>
+              <span class="text-[9px] font-medium tracking-wide uppercase">Generate</span>
+            </div>
+          </div>
+
+          <!-- 右侧 大正方形图片区 严格1:1 -->
+          <div id="top-img-box" class="col-span-2 glass app-hover rounded-2xl aspect-square overflow-hidden relative group cursor-pointer">
+            <img id="top-img" src="" alt="Custom" class="w-full h-full object-cover opacity-90 hidden">
+            <!-- 空状态 -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-white dark:text-lumina-950 group-hover:opacity-0 transition-opacity duration-300">
+              <i class="ri-image-add-line text-3xl mb-1 opacity-80"></i>
+              <span class="text-xs font-medium tracking-wide uppercase opacity-70">Memories</span>
+            </div>
+            <!-- 遮罩 -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
+        </div>
+
+        <!-- 第二行：大正方形图片区 + 2x2小正方形APP -->
+        <div class="grid grid-cols-4 gap-4 w-full">
+          <!-- 左侧 大正方形图片区 严格1:1 -->
+          <div id="bottom-img-box" class="col-span-2 glass app-hover rounded-2xl aspect-square overflow-hidden relative group cursor-pointer">
+            <img id="bottom-img" src="" alt="Custom" class="w-full h-full object-cover opacity-90 hidden">
+            <!-- 空状态 -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-white dark:text-lumina-950 group-hover:opacity-0 transition-opacity duration-300">
+              <i class="ri-image-add-line text-3xl mb-1 opacity-80"></i>
+              <span class="text-xs font-medium tracking-wide uppercase opacity-70">Capture</span>
+            </div>
+            <!-- 遮罩 -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
+
+          <!-- 右侧2x2 小正方形APP 严格1:1 -->
+          <div class="col-span-2 grid grid-cols-2 grid-rows-2 gap-4">
+            <!-- 5. 语音助手 小正方形 -->
+            <div class="glass app-hover rounded-2xl aspect-square flex flex-col items-center justify-center text-white dark:text-lumina-950 gap-1 theme-transition">
+              <i class="ri-mic-fill text-xl"></i>
+              <span class="text-[9px] font-medium tracking-wide uppercase">Voice</span>
+            </div>
+            <!-- 6. 灵感库 小正方形 -->
+            <div class="glass app-hover rounded-2xl aspect-square flex flex-col items-center justify-center text-white dark:text-lumina-950 gap-1 theme-transition">
+              <i class="ri-lightbulb-flash-fill text-xl"></i>
+              <span class="text-[9px] font-medium tracking-wide uppercase">Inspire</span>
+            </div>
+            <!-- 7. 设置 小正方形 -->
+            <div id="setting-btn" class="glass app-hover rounded-2xl aspect-square flex flex-col items-center justify-center text-white dark:text-lumina-950 gap-1 theme-transition">
+              <i class="ri-settings-4-fill text-xl"></i>
+              <span class="text-[9px] font-medium tracking-wide uppercase">Setting</span>
+            </div>
+            <!-- 8. 我的 小正方形 -->
+            <div class="glass app-hover rounded-2xl aspect-square flex flex-col items-center justify-center text-white dark:text-lumina-950 gap-1 theme-transition">
+              <i class="ri-user-3-fill text-xl"></i>
+              <span class="text-[9px] font-medium tracking-wide uppercase">Profile</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部磨砂Dock栏 -->
+      <div class="mx-6 mb-8 h-[70px] glass rounded-[24px] flex items-center justify-around px-4 theme-transition">
+        <div class="flex flex-col items-center justify-center gap-1 text-white/80 dark:text-lumina-950/80 theme-transition">
+          <i class="ri-home-smile-fill text-xl"></i>
+          <span class="text-[8px] font-medium uppercase">Home</span>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-white/10 dark:bg-lumina-950/10 flex items-center justify-center theme-transition">
+          <i class="ri-add-fill text-white dark:text-lumina-950 text-xl theme-transition"></i>
+        </div>
+        <div class="flex flex-col items-center justify-center gap-1 text-white/80 dark:text-lumina-950/80 theme-transition">
+          <i class="ri-user-3-fill text-xl"></i>
+          <span class="text-[8px] font-medium uppercase">Mine</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================== 对话主页面 双模式适配 ====================== -->
+    <div id="chat-main" class="absolute inset-0 bg-lumina-950 dark:bg-white transform translate-x-full transition-transform duration-400 ease-out z-30 flex flex-col theme-transition">
+      <!-- 顶部导航 -->
+      <div class="px-6 py-4 flex items-center justify-between border-b border-lumina-800 dark:border-lumina-200 theme-transition">
+        <button id="back-home" class="text-white dark:text-lumina-950 text-lg theme-transition">
+          <i class="ri-arrow-left-s-line"></i>
+        </button>
+        <h2 class="text-white dark:text-lumina-950 text-lg font-bold theme-transition">Messages</h2>
+        <div class="flex items-center gap-3">
+          <i class="ri-search-line text-white dark:text-lumina-950 text-lg theme-transition"></i>
+          <i class="ri-edit-line text-white dark:text-lumina-950 text-lg theme-transition"></i>
+        </div>
+      </div>
+
+      <!-- 内容区 -->
+      <div class="flex-1 overflow-hidden flex flex-col">
+        <div id="chat-tab-content" class="flex-1 overflow-y-auto">
+          <!-- 聊天列表 -->
+          <div id="chat-list-tab" class="w-full h-full">
+            <div id="chat-list" class="w-full px-4">
+              <!-- 动态生成聊天项 -->
+            </div>
+          </div>
+
+          <!-- 通讯录Tab -->
+          <div id="contact-tab" class="w-full h-full hidden">
+            <div class="sticky top-0 bg-lumina-950 dark:bg-white z-10 px-4 py-2 theme-transition">
+              <div class="w-full bg-lumina-900 dark:bg-lumina-100 rounded-lg px-3 py-2 flex items-center gap-2 theme-transition">
+                <i class="ri-search-line text-lumina-400 dark:text-lumina-500 theme-transition"></i>
+                <input type="text" placeholder="Search" class="bg-transparent w-full focus:outline-none text-sm text-white dark:text-lumina-950 theme-transition">
+              </div>
+              <div class="px-2 py-3 flex items-center justify-between border-b border-lumina-800 dark:border-lumina-200 theme-transition">
+                <span class="text-sm font-medium text-white dark:text-lumina-950 theme-transition">My Characters</span>
+                <button id="add-character-btn" class="text-white dark:text-lumina-950 theme-transition">
+                  <i class="ri-user-add-line"></i>
+                </button>
+              </div>
+            </div>
+            <div id="character-list" class="w-full px-4">
+              <!-- 动态生成人设列表 -->
+            </div>
+          </div>
+
+          <!-- 朋友圈Tab -->
+          <div id="moment-tab" class="w-full h-full hidden flex flex-col">
+            <div class="sticky top-0 bg-lumina-950 dark:bg-white z-10 border-b border-lumina-800 dark:border-lumina-200 px-6 py-4 flex items-center justify-between theme-transition">
+              <button id="back-moment" class="text-white dark:text-lumina-950 theme-transition">
+                <i class="ri-arrow-left-s-line"></i>
+              </button>
+              <h2 class="text-white dark:text-lumina-950 text-lg font-bold theme-transition">Moments</h2>
+              <button id="add-moment-btn" class="text-white dark:text-lumina-950 theme-transition">
+                <i class="ri-camera-line"></i>
+              </button>
+            </div>
+            <div id="moment-list" class="flex-1 overflow-y-auto px-4">
+              <!-- 动态生成朋友圈 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部Tab栏 -->
+        <div class="w-full h-14 border-t border-lumina-800 dark:border-lumina-200 flex items-center justify-around bg-lumina-950 dark:bg-white theme-transition">
+          <button class="chat-tab-btn active flex flex-col items-center justify-center gap-1" data-tab="chat-list-tab">
+            <i class="ri-message-3-fill text-lg text-white dark:text-lumina-950 theme-transition"></i>
+            <span class="text-[10px] text-white dark:text-lumina-950 theme-transition">Chats</span>
+          </button>
+          <button class="chat-tab-btn flex flex-col items-center justify-center gap-1" data-tab="contact-tab">
+            <i class="ri-contacts-line text-lg text-lumina-400 dark:text-lumina-500 theme-transition"></i>
+            <span class="text-[10px] text-lumina-400 dark:text-lumina-500 theme-transition">Contacts</span>
+          </button>
+          <button class="chat-tab-btn flex flex-col items-center justify-center gap-1" data-tab="moment-tab">
+            <i class="ri-compass-line text-lg text-lumina-400 dark:text-lumina-500 theme-transition"></i>
+            <span class="text-[10px] text-lumina-400 dark:text-lumina-500 theme-transition">Explore</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================== 聊天详情页面 ====================== -->
+    <div id="chat-detail" class="absolute inset-0 bg-lumina-950 dark:bg-white transform translate-x-full transition-transform duration-400 ease-out z-40 flex flex-col theme-transition">
+      <div class="px-4 py-3 border-b border-lumina-800 dark:border-lumina-200 flex items-center justify-between sticky top-0 bg-lumina-950 dark:bg-white z-10 theme-transition">
+        <button id="back-chat-list" class="text-white dark:text-lumina-950 text-lg theme-transition">
+          <i class="ri-arrow-left-s-line"></i>
+        </button>
+        <div class="flex flex-col items-center">
+          <h2 id="chat-character-name" class="text-white dark:text-lumina-950 text-base font-bold theme-transition">Character</h2>
+          <span class="text-lumina-400 dark:text-lumina-500 text-[10px] theme-transition">Online</span>
+        </div>
+        <!-- 三点菜单，点击打开编辑弹窗 -->
+        <button id="edit-character-trigger" class="text-white dark:text-lumina-950 text-lg theme-transition">
+          <i class="ri-more-2-line"></i>
+        </button>
+      </div>
+
+      <div id="chat-message-list" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        <!-- 动态生成聊天消息 -->
+      </div>
+
+      <div class="w-full px-4 py-3 border-t border-lumina-800 dark:border-lumina-200 flex items-center gap-3 bg-lumina-950 dark:bg-white theme-transition">
+        <i class="ri-emotion-line text-white dark:text-lumina-950 text-xl theme-transition"></i>
+        <input id="chat-input" type="text" placeholder="输入消息..." class="flex-1 bg-lumina-900 dark:bg-lumina-100 rounded-full px-4 py-2 focus:outline-none text-white dark:text-lumina-950 theme-transition">
+        <button id="send-message-btn" class="w-8 h-8 rounded-full bg-white dark:bg-lumina-950 flex items-center justify-center text-lumina-950 dark:text-white theme-transition">
+          <i class="ri-send-plane-fill text-sm"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ====================== 设置侧边栏 - 新增数据管理和模型拉取功能 ====================== -->
+    <div id="setting-panel" class="absolute inset-0 bg-lumina-950 dark:bg-white transform translate-x-full transition-transform duration-400 ease-out z-30 flex flex-col theme-transition">
+      <div class="p-6 border-b border-lumina-800 dark:border-lumina-200 flex items-center justify-between theme-transition">
+        <h2 class="text-xl font-bold text-white dark:text-lumina-950 theme-transition">Settings</h2>
+        <button id="close-setting" class="text-white dark:text-lumina-950 text-xl theme-transition">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <div class="flex-1 p-6 overflow-y-auto">
+        <div class="flex flex-col gap-6">
+          <!-- API配置（原有） -->
+          <div class="flex flex-col gap-3">
+            <h3 class="text-base font-semibold text-white dark:text-lumina-950 theme-transition">API Configuration</h3>
+            <div class="flex flex-col gap-2">
+              <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">API Key</label>
+              <input id="api-key" type="password" class="w-full px-4 py-3 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-900 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 transition-colors text-white dark:text-lumina-950 theme-transition" placeholder="Enter your API Key">
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">API Base URL</label>
+              <input id="api-base" type="text" class="w-full px-4 py-3 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-900 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 transition-colors text-white dark:text-lumina-950 theme-transition" placeholder="https://api.openai.com/v1">
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">Model Name</label>
+              <div class="flex items-center gap-2">
+                <input id="api-model" type="text" class="flex-1 px-4 py-3 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-900 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 transition-colors text-white dark:text-lumina-950 theme-transition" placeholder="gpt-3.5-turbo">
+                <button id="fetch-models-btn" class="px-3 py-3 rounded-lg bg-lumina-800 dark:bg-lumina-200 text-white dark:text-lumina-950 font-medium text-sm app-hover theme-transition">
+                  <i class="ri-refresh-line mr-1"></i>Fetch
+                </button>
+              </div>
+              <!-- 新增：模型列表下拉框 -->
+              <select id="model-select" class="w-full px-4 py-3 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-900 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 transition-colors text-white dark:text-lumina-950 theme-transition mt-2 hidden">
+                <option value="">Select a model</option>
+              </select>
+            </div>
+            <button id="save-api" class="w-full py-3 rounded-lg bg-white dark:bg-lumina-950 text-lumina-950 dark:text-white font-bold mt-2 app-hover theme-transition">
+              Save Config
+            </button>
+          </div>
+
+          <!-- 新增：数据管理区域（已改为中文） -->
+          <div class="flex flex-col gap-3">
+            <h3 class="text-base font-semibold text-white dark:text-lumina-950 theme-transition">数据管理</h3>
+            <!-- 保存数据 -->
+            <button id="save-all-data-btn" class="w-full py-3 rounded-lg bg-lumina-800 dark:bg-lumina-200 text-white dark:text-lumina-950 font-bold app-hover theme-transition">
+              <i class="ri-save-line mr-2"></i>保存所有数据
+            </button>
+            <!-- 导出数据 -->
+            <button id="export-data-btn" class="w-full py-3 rounded-lg bg-lumina-800 dark:bg-lumina-200 text-white dark:text-lumina-950 font-bold app-hover theme-transition">
+              <i class="ri-download-line mr-2"></i>导出数据 (JSON)
+            </button>
+            <!-- 导入数据 -->
+            <div class="flex items-center gap-2">
+              <button id="import-data-btn" class="flex-1 py-3 rounded-lg bg-lumina-800 dark:bg-lumina-200 text-white dark:text-lumina-950 font-bold app-hover theme-transition">
+                <i class="ri-upload-line mr-2"></i>导入数据
+              </button>
+              <input type="file" id="import-file-input" accept=".json" class="hidden">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================== 新建人设弹窗 ====================== -->
+    <div id="add-character-modal" class="absolute inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center hidden">
+      <div class="w-[90%] max-w-[320px] bg-lumina-900 dark:bg-white rounded-2xl p-6 flex flex-col border border-lumina-800 dark:border-lumina-200 theme-transition">
+        <h3 class="text-lg font-bold text-white dark:text-lumina-950 text-center mb-4 theme-transition">Create Character</h3>
+        
+        <!-- 自定义头像上传区域 -->
+        <div class="flex justify-center mb-4">
+          <div id="character-avatar-preview" class="w-20 h-20 rounded-full overflow-hidden bg-lumina-800 dark:bg-lumina-200 flex items-center justify-center cursor-pointer theme-transition">
+            <i class="ri-user-add-line text-3xl text-white dark:text-lumina-950 theme-transition"></i>
+          </div>
+        </div>
+        
+        <div class="flex flex-col gap-3 mb-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">Name</label>
+            <input id="character-name" type="text" class="w-full px-3 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-950 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 text-white dark:text-lumina-950 theme-transition" placeholder="Character Name">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">个性签名</label>
+            <input id="character-sign" type="text" class="w-full px-3 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-950 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 text-white dark:text-lumina-950 theme-transition" placeholder="Short bio">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">Personality Prompt</label>
+            <textarea id="character-prompt" rows="4" class="w-full px-3 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-950 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 text-white dark:text-lumina-950 theme-transition" placeholder="Describe the character's personality, speaking style, backstory..."></textarea>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="close-character-modal" class="flex-1 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 text-lumina-400 dark:text-lumina-500 font-medium theme-transition">Cancel</button>
+          <button id="save-character-btn" class="flex-1 py-2 rounded-lg bg-white dark:bg-lumina-950 text-lumina-950 dark:text-white font-bold theme-transition">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================== 编辑人物弹窗（新增） ====================== -->
+    <div id="edit-character-modal" class="absolute inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center hidden">
+      <div class="w-[90%] max-w-[320px] bg-lumina-900 dark:bg-white rounded-2xl p-6 flex flex-col border border-lumina-800 dark:border-lumina-200 theme-transition">
+        <h3 class="text-lg font-bold text-white dark:text-lumina-950 text-center mb-4 theme-transition">编辑人物</h3>
+        
+        <!-- 头像上传区域（独立input） -->
+        <div class="flex justify-center mb-4">
+          <div id="edit-avatar-preview" class="w-20 h-20 rounded-full overflow-hidden bg-lumina-800 dark:bg-lumina-200 flex items-center justify-center cursor-pointer theme-transition">
+            <i class="ri-user-3-line text-3xl text-white dark:text-lumina-950 theme-transition"></i>
+          </div>
+        </div>
+        <input type="file" id="edit-avatar-upload" accept="image/*" class="hidden">
+        
+        <div class="flex flex-col gap-3 mb-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">姓名</label>
+            <input id="edit-character-name" type="text" class="w-full px-3 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-950 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 text-white dark:text-lumina-950 theme-transition" placeholder="姓名">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">个性签名</label>
+            <input id="edit-character-sign" type="text" class="w-full px-3 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-950 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 text-white dark:text-lumina-950 theme-transition" placeholder="个性签名">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">人物设定</label>
+            <textarea id="edit-character-prompt" rows="4" class="w-full px-3 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-950 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 text-white dark:text-lumina-950 theme-transition" placeholder="人物设定..."></textarea>
+          </div>
+        </div>
+
+        <!-- 底部按钮：保存修改 + 红色删除 -->
+        <div class="flex flex-col gap-3">
+          <button id="save-edit-character" class="w-full py-2 rounded-lg bg-white dark:bg-lumina-950 text-lumina-950 dark:text-white font-bold theme-transition">
+            保存修改
+          </button>
+          <button id="delete-character-btn" class="w-full py-2 rounded-lg btn-danger theme-transition">
+            删除联系人
+          </button>
+          <button id="close-edit-modal" class="w-full py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 text-lumina-400 dark:text-lumina-500 font-medium theme-transition">
+            取消
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================== 发布朋友圈弹窗 ====================== -->
+    <div id="add-moment-modal" class="absolute inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center hidden">
+      <div class="w-[90%] max-w-[320px] bg-lumina-900 dark:bg-white rounded-2xl p-6 flex flex-col border border-lumina-800 dark:border-lumina-200 theme-transition">
+        <h3 class="text-lg font-bold text-white dark:text-lumina-950 text-center mb-4 theme-transition">New Post</h3>
+        <div class="flex flex-col gap-3 mb-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">Content</label>
+            <textarea id="moment-content" rows="4" class="w-full px-3 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 bg-lumina-950 dark:bg-lumina-100 focus:outline-none focus:border-white dark:focus:border-lumina-950 text-white dark:text-lumina-950 theme-transition" placeholder="What's on your mind?"></textarea>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="close-moment-modal" class="flex-1 py-2 rounded-lg border border-lumina-800 dark:border-lumina-200 text-lumina-400 dark:text-lumina-500 font-medium theme-transition">Cancel</button>
+          <button id="save-moment-btn" class="flex-1 py-2 rounded-lg bg-white dark:bg-lumina-950 text-lumina-950 dark:text-white font-bold theme-transition">Post</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 隐藏的图片上传input（用于主屏图片） -->
+    <input type="file" id="img-upload" accept="image/*" class="hidden">
+    <!-- 用于新建人设的头像上传 -->
+    <input type="file" id="avatar-upload" accept="image/*" class="hidden">
+  </div>
+
+  <script>
+    // ====================== 标题自定义功能 ======================
+    const titleEl = document.getElementById('custom-title');
+    // 双击修改标题
+    titleEl.addEventListener('dblclick', () => {
+      const newTitle = prompt('请输入自定义标题', titleEl.textContent);
+      if (newTitle !== null && newTitle.trim() !== '') {
+        titleEl.textContent = newTitle.trim();
+        saveConfig({ customTitle: newTitle.trim() });
+      }
+    });
+
+    // ====================== 黑白模式切换 ======================
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const html = document.documentElement;
+    const THEME_STORAGE_KEY = 'lumina_theme';
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      if (savedTheme === 'light') {
+        html.classList.add('dark');
+        themeIcon.classList.remove('ri-sun-fill');
+        themeIcon.classList.add('ri-moon-fill');
+      } else {
+        html.classList.remove('dark');
+        themeIcon.classList.remove('ri-moon-fill');
+        themeIcon.classList.add('ri-sun-fill');
+      }
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const isDark = html.classList.toggle('dark');
+      if (isDark) {
+        localStorage.setItem(THEME_STORAGE_KEY, 'light');
+        themeIcon.classList.remove('ri-sun-fill');
+        themeIcon.classList.add('ri-moon-fill');
+      } else {
+        localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+        themeIcon.classList.remove('ri-moon-fill');
+        themeIcon.classList.add('ri-sun-fill');
+      }
+      renderCharacterList();
+      renderChatList();
+      renderMomentList();
+    });
+
+    // ====================== 基础工具函数 ======================
+    function updateTime() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('time').textContent = `${hours}:${minutes}`;
+    }
+    updateTime();
+    setInterval(updateTime, 60000);
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+      
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return `${Math.floor(diff/60000)}分钟前`;
+      if (diff < 86400000) return `${Math.floor(diff/3600000)}小时前`;
+      if (diff < 604800000) return `${Math.floor(diff/86400000)}天前`;
+      
+      return `${date.getMonth()+1}/${date.getDate()}`;
+    }
+
+    const STORAGE_KEY = 'lumina_ai_config';
+
+    function loadConfig() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const config = JSON.parse(saved);
+        if (config.apiKey) document.getElementById('api-key').value = config.apiKey;
+        if (config.apiBase) document.getElementById('api-base').value = config.apiBase;
+        if (config.apiModel) document.getElementById('api-model').value = config.apiModel;
+        if (config.topImg) {
+          const topImg = document.getElementById('top-img');
+          topImg.src = config.topImg;
+          topImg.classList.remove('hidden');
+        }
+        if (config.bottomImg) {
+          const bottomImg = document.getElementById('bottom-img');
+          bottomImg.src = config.bottomImg;
+          bottomImg.classList.remove('hidden');
+        }
+        // 加载自定义标题
+        if (config.customTitle) {
+          titleEl.textContent = config.customTitle;
+        }
+        if (config.characters) {
+          window.characterList = config.characters;
+          renderCharacterList();
+        }
+        if (config.chatRecords) {
+          window.chatRecords = config.chatRecords;
+          renderChatList();
+        }
+        if (config.moments) {
+          window.moments = config.moments;
+          renderMomentList();
+        }
+      }
+      loadTheme();
+    }
+
+    function saveConfig(data) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const config = saved ? JSON.parse(saved) : {};
+      const newConfig = { ...config, ...data };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig));
+      return newConfig;
+    }
+
+    window.characterList = [];
+    window.chatRecords = {};
+    window.moments = [];
+    window.currentChatId = null;
+    window.currentCharacter = null;
+    // 临时存储选中的头像
+    window.tempAvatar = null;
+    // 编辑用临时头像
+    window.tempEditAvatar = null;
+
+    // ====================== 页面跳转逻辑 ======================
+    document.getElementById('chat-btn').addEventListener('click', () => {
+      document.getElementById('chat-main').classList.remove('translate-x-full');
+    });
+    document.getElementById('back-home').addEventListener('click', () => {
+      document.getElementById('chat-main').classList.add('translate-x-full');
+    });
+
+    document.getElementById('setting-btn').addEventListener('click', () => {
+      document.getElementById('setting-panel').classList.remove('translate-x-full');
+    });
+    document.getElementById('close-setting').addEventListener('click', () => {
+      document.getElementById('setting-panel').classList.add('translate-x-full');
+    });
+
+    document.getElementById('back-chat-list').addEventListener('click', () => {
+      document.getElementById('chat-detail').classList.add('translate-x-full');
+      window.currentChatId = null;
+      window.currentCharacter = null;
+    });
+
+    document.getElementById('character-btn').addEventListener('click', () => {
+      document.getElementById('chat-main').classList.remove('translate-x-full');
+      document.querySelector('[data-tab="contact-tab"]').click();
+    });
+
+    document.getElementById('moment-btn').addEventListener('click', () => {
+      document.getElementById('chat-main').classList.remove('translate-x-full');
+      document.querySelector('[data-tab="moment-tab"]').click();
+    });
+
+    // ====================== 图片上传功能 ======================
+    const imgUpload = document.getElementById('img-upload');
+    const topImgBox = document.getElementById('top-img-box');
+    const bottomImgBox = document.getElementById('bottom-img-box');
+    let activeImgBox = null;
+
+    topImgBox.addEventListener('click', () => {
+      activeImgBox = 'top';
+      imgUpload.click();
+    });
+    bottomImgBox.addEventListener('click', () => {
+      activeImgBox = 'bottom';
+      imgUpload.click();
+    });
+
+    imgUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file || !activeImgBox) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imgData = event.target.result;
+        const imgId = activeImgBox === 'top' ? 'top-img' : 'bottom-img';
+        const imgElement = document.getElementById(imgId);
+        
+        imgElement.src = imgData;
+        imgElement.classList.remove('hidden');
+        saveConfig({ [`${activeImgBox}Img`]: imgData });
+        
+        activeImgBox = null;
+        imgUpload.value = '';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // ====================== 头像上传功能（新建人设） ======================
+    const avatarUpload = document.getElementById('avatar-upload');
+    const avatarPreview = document.getElementById('character-avatar-preview');
+
+    avatarPreview.addEventListener('click', () => {
+      avatarUpload.click();
+    });
+
+    avatarUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const avatarData = event.target.result;
+        window.tempAvatar = avatarData;
+        
+        avatarPreview.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = avatarData;
+        img.className = 'w-full h-full object-cover';
+        avatarPreview.appendChild(img);
+        
+        avatarUpload.value = '';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // ====================== 头像上传功能（编辑人设）- 新增 ======================
+    const editAvatarUpload = document.getElementById('edit-avatar-upload');
+    const editAvatarPreview = document.getElementById('edit-avatar-preview');
+
+    editAvatarPreview.addEventListener('click', () => {
+      editAvatarUpload.click();
+    });
+
+    editAvatarUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const avatarData = event.target.result;
+        window.tempEditAvatar = avatarData;
+        
+        editAvatarPreview.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = avatarData;
+        img.className = 'w-full h-full object-cover';
+        editAvatarPreview.appendChild(img);
+        
+        editAvatarUpload.value = '';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // ====================== API配置保存 ======================
+    document.getElementById('save-api').addEventListener('click', () => {
+      const apiKey = document.getElementById('api-key').value;
+      const apiBase = document.getElementById('api-base').value;
+      const apiModel = document.getElementById('api-model').value;
+      
+      saveConfig({ apiKey, apiBase, apiModel });
+      
+      const btn = document.getElementById('save-api');
+      btn.textContent = 'Saved!';
+      setTimeout(() => btn.textContent = 'Save Config', 1500);
+    });
+
+    // ====================== 新增：数据管理功能（已汉化） ======================
+    // 1. 保存所有数据
+    document.getElementById('save-all-data-btn').addEventListener('click', () => {
+      const allData = {
+        apiKey: document.getElementById('api-key').value,
+        apiBase: document.getElementById('api-base').value,
+        apiModel: document.getElementById('api-model').value,
+        customTitle: titleEl.textContent,
+        topImg: document.getElementById('top-img').src || '',
+        bottomImg: document.getElementById('bottom-img').src || '',
+        characters: window.characterList,
+        chatRecords: window.chatRecords,
+        moments: window.moments
+      };
+      
+      saveConfig(allData);
+      
+      const btn = document.getElementById('save-all-data-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="ri-check-line mr-2"></i>数据已保存！';
+      setTimeout(() => btn.innerHTML = originalText, 1500);
+    });
+
+    // 2. 导出数据为JSON文件
+    document.getElementById('export-data-btn').addEventListener('click', () => {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (!savedData) {
+        alert('没有数据可导出！');
+        return;
+      }
+      
+      const blob = new Blob([savedData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lumina_data_${new Date().getTime()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      const btn = document.getElementById('export-data-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="ri-check-line mr-2"></i>已导出！';
+      setTimeout(() => btn.innerHTML = originalText, 1500);
+    });
+
+    // 3. 导入数据
+    document.getElementById('import-data-btn').addEventListener('click', () => {
+      document.getElementById('import-file-input').click();
+    });
+
+    document.getElementById('import-file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file || !file.name.endsWith('.json')) {
+        alert('请选择有效的JSON文件！');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const importedData = JSON.parse(event.target.result);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(importedData));
+          
+          // 重新加载配置
+          loadConfig();
+          
+          const btn = document.getElementById('import-data-btn');
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<i class="ri-check-line mr-2"></i>已导入！';
+          setTimeout(() => btn.innerHTML = originalText, 1500);
+          
+          alert('数据导入成功！请刷新页面以应用更改。');
+        } catch (err) {
+          alert('导入失败：' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // ====================== 新增：拉取模型列表功能 ======================
+    document.getElementById('fetch-models-btn').addEventListener('click', async () => {
+      const apiKey = document.getElementById('api-key').value;
+      const apiBase = document.getElementById('api-base').value || 'https://api.openai.com/v1';
+      
+      if (!apiKey) {
+        alert('Please enter API Key first!');
+        return;
+      }
+      
+      const btn = document.getElementById('fetch-models-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="ri-loader-2-line mr-1 animate-spin"></i>Loading';
+      btn.disabled = true;
+      
+      try {
+        // 调用OpenAI API获取模型列表
+        const res = await fetch(`${apiBase}/models`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`
+          }
+        });
+        
+        if (!res.ok) throw new Error(`API Error: ${res.status}`);
+        
+        const data = await res.json();
+        const models = data.data
+          .map(m => m.id)
+          .filter(id => id.includes('gpt') || id.includes('davinci') || id.includes('curie') || id.includes('babbage') || id.includes('ada'))
+          .sort();
+        
+        // 显示模型下拉框
+        const select = document.getElementById('model-select');
+        select.classList.remove('hidden');
+        select.innerHTML = '<option value="">Select a model</option>';
+        
+        // 添加模型选项
+        models.forEach(modelId => {
+          const option = document.createElement('option');
+          option.value = modelId;
+          option.textContent = modelId;
+          select.appendChild(option);
+        });
+        
+        // 选择模型后自动填充到输入框
+        select.addEventListener('change', () => {
+          if (select.value) {
+            document.getElementById('api-model').value = select.value;
+          }
+        });
+        
+      } catch (err) {
+        alert('Failed to fetch models: ' + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    });
+
+    // ====================== 对话Tab切换 ======================
+    const tabBtns = document.querySelectorAll('.chat-tab-btn');
+    const tabContents = document.querySelectorAll('#chat-tab-content > div');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.getAttribute('data-tab');
+        const isDark = !document.documentElement.classList.contains('dark');
+        
+        tabBtns.forEach(b => {
+          b.classList.remove('active');
+          b.querySelector('i').className = b.querySelector('i').className.replace('fill', 'line');
+          b.querySelector('i').classList.remove(isDark ? 'text-white' : 'text-lumina-950');
+          b.querySelector('i').classList.add(isDark ? 'text-lumina-400' : 'text-lumina-500');
+          b.querySelector('span').classList.remove(isDark ? 'text-white' : 'text-lumina-950');
+          b.querySelector('span').classList.add(isDark ? 'text-lumina-400' : 'text-lumina-500');
+        });
+        
+        btn.classList.add('active');
+        btn.querySelector('i').className = btn.querySelector('i').className.replace('line', 'fill');
+        btn.querySelector('i').classList.remove(isDark ? 'text-lumina-400' : 'text-lumina-500');
+        btn.querySelector('i').classList.add(isDark ? 'text-white' : 'text-lumina-950');
+        btn.querySelector('span').classList.remove(isDark ? 'text-lumina-400' : 'text-lumina-500');
+        btn.querySelector('span').classList.add(isDark ? 'text-white' : 'text-lumina-950');
+
+        tabContents.forEach(tab => tab.classList.add('hidden'));
+        document.getElementById(targetTab).classList.remove('hidden');
+      });
+    });
+
+    // ====================== 人设创建与管理 ======================
+    const addCharacterBtn = document.getElementById('add-character-btn');
+    const addCharacterModal = document.getElementById('add-character-modal');
+    const closeCharacterModal = document.getElementById('close-character-modal');
+    const saveCharacterBtn = document.getElementById('save-character-btn');
+
+    addCharacterBtn.addEventListener('click', () => {
+      // 打开弹窗时重置头像预览
+      window.tempAvatar = null;
+      avatarPreview.innerHTML = '<i class="ri-user-add-line text-3xl text-white dark:text-lumina-950 theme-transition"></i>';
+      addCharacterModal.classList.remove('hidden');
+    });
+    closeCharacterModal.addEventListener('click', () => {
+      addCharacterModal.classList.add('hidden');
+      document.getElementById('character-name').value = '';
+      document.getElementById('character-sign').value = '';
+      document.getElementById('character-prompt').value = '';
+      // 重置头像预览
+      window.tempAvatar = null;
+      avatarPreview.innerHTML = '<i class="ri-user-add-line text-3xl text-white dark:text-lumina-950 theme-transition"></i>';
+    });
+
+    saveCharacterBtn.addEventListener('click', () => {
+      const name = document.getElementById('character-name').value.trim();
+      const sign = document.getElementById('character-sign').value.trim();
+      const prompt = document.getElementById('character-prompt').value.trim();
+
+      if (!name || !prompt) {
+        alert('Please enter name and personality prompt');
+        return;
+      }
+
+      const characterId = 'char_' + Date.now();
+      const newCharacter = {
+        id: characterId,
+        name: name,
+        sign: sign || '保持真实',
+        prompt: prompt,
+        // 使用自定义头像或默认随机头像
+        avatar: window.tempAvatar || `https://picsum.photos/200/200?random=${characterId}`,
+        createTime: Date.now()
+      };
+
+      window.characterList.push(newCharacter);
+      saveConfig({ characters: window.characterList });
+      renderCharacterList();
+      closeCharacterModal.click();
+
+      window.chatRecords[characterId] = [
+        {
+          role: 'assistant',
+          content: `嘿！我是${name}，很高兴认识你～`,
+          time: Date.now()
+        }
+      ];
+      saveConfig({ chatRecords: window.chatRecords });
+      renderChatList();
+    });
+
+    function renderCharacterList() {
+      const el = document.getElementById('character-list');
+      el.innerHTML = '';
+      const isDark = !document.documentElement.classList.contains('dark');
+
+      window.characterList.forEach(char => {
+        const item = document.createElement('div');
+        item.className = 'px-2 py-3 flex items-center gap-3 border-b border-lumina-800 dark:border-lumina-200 theme-transition';
+        item.innerHTML = `
+          <div class="w-10 h-10 rounded-full overflow-hidden bg-lumina-800 dark:bg-lumina-200 theme-transition">
+            <img src="${char.avatar}" class="w-full h-full object-cover">
+          </div>
+          <div class="flex-1">
+            <h4 class="text-base font-medium text-white dark:text-lumina-950 theme-transition">${char.name}</h4>
+            <p class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">${char.sign}</p>
+          </div>
+        `;
+        item.addEventListener('click', () => enterChatDetail(char));
+        el.appendChild(item);
+      });
+    }
+
+    function renderChatList() {
+      const el = document.getElementById('chat-list');
+      el.innerHTML = '';
+      const isDark = !document.documentElement.classList.contains('dark');
+
+      const sortedChats = Object.keys(window.chatRecords).map(chatId => {
+        const char = window.characterList.find(c => c.id === chatId);
+        const messages = window.chatRecords[chatId];
+        const lastMsg = messages[messages.length - 1];
+        return { chatId, char, lastMsg, time: lastMsg.time };
+      }).sort((a, b) => b.time - a.time);
+
+      sortedChats.forEach(chat => {
+        if (!chat.char) return;
+
+        const item = document.createElement('div');
+        item.className = 'py-3 flex items-center gap-3 border-b border-lumina-800 dark:border-lumina-200 theme-transition';
+        item.innerHTML = `
+          <div class="w-12 h-12 rounded-full overflow-hidden bg-lumina-800 dark:bg-lumina-200 theme-transition">
+            <img src="${chat.char.avatar}" class="w-full h-full object-cover">
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between mb-1">
+              <h4 class="text-base font-medium text-white dark:text-lumina-950 theme-transition">${chat.char.name}</h4>
+              <span class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">${formatTime(chat.time)}</span>
+            </div>
+            <p class="text-sm text-lumina-400 dark:text-lumina-500 truncate theme-transition">${chat.lastMsg.content}</p>
+          </div>
+        `;
+        item.addEventListener('click', () => enterChatDetail(chat.char));
+        el.appendChild(item);
+      });
+    }
+
+    function enterChatDetail(char) {
+      window.currentChatId = char.id;
+      window.currentCharacter = char;
+      
+      document.getElementById('chat-character-name').textContent = char.name;
+      renderChatMessage();
+      document.getElementById('chat-detail').classList.remove('translate-x-full');
+    }
+
+    function renderChatMessage() {
+      const el = document.getElementById('chat-message-list');
+      el.innerHTML = '';
+      const isDark = !document.documentElement.classList.contains('dark');
+
+      const messages = window.chatRecords[window.currentChatId] || [];
+      
+      messages.forEach(msg => {
+        const item = document.createElement('div');
+        item.className = `flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`;
+        
+        if (msg.role === 'user') {
+          item.innerHTML = `<div class="bg-white dark:bg-lumina-950 text-lumina-950 dark:text-white rounded-2xl rounded-tr-sm max-w-[75%] p-3 text-sm theme-transition">${msg.content}</div>`;
+        } else {
+          item.innerHTML = `
+            <div class="flex items-start gap-2">
+              <div class="w-8 h-8 rounded-full overflow-hidden bg-lumina-800 dark:bg-lumina-200 flex-shrink-0 mt-1 theme-transition">
+                <img src="${window.currentCharacter.avatar}" class="w-full h-full object-cover">
+              </div>
+              <div class="bg-lumina-800 dark:bg-lumina-200 text-white dark:text-lumina-950 rounded-2xl rounded-tl-sm max-w-[75%] p-3 text-sm theme-transition">${msg.content}</div>
+            </div>
+          `;
+        }
+        el.appendChild(item);
+      });
+
+      el.scrollTop = el.scrollHeight;
+    }
+
+    // 发送消息
+    const sendBtn = document.getElementById('send-message-btn');
+    const chatInput = document.getElementById('chat-input');
+
+    async function sendMessage() {
+      const content = chatInput.value.trim();
+      if (!content || !window.currentChatId) return;
+
+      chatInput.value = '';
+
+      const userMsg = { role: 'user', content, time: Date.now() };
+      if (!window.chatRecords[window.currentChatId]) window.chatRecords[window.currentChatId] = [];
+      window.chatRecords[window.currentChatId].push(userMsg);
+      saveConfig({ chatRecords: window.chatRecords });
+      renderChatMessage();
+
+      try {
+        const config = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        const apiKey = config.apiKey;
+        const apiBase = config.apiBase || 'https://api.openai.com/v1';
+        const model = config.apiModel || 'gpt-3.5-turbo';
+
+        if (!apiKey) throw new Error('请先配置API密钥');
+
+        // 增强活人感的中文系统提示
+        const systemContent = `你需严格遵循以下人设：${window.currentCharacter.prompt}，你的名字是${window.currentCharacter.name}。请使用简体中文对话，像真人一样口语化、自然、简短，并带有人情味，不要暴露你是AI。`;
+
+        const messages = [
+          { role: 'system', content: systemContent },
+          ...window.chatRecords[window.currentChatId]
+        ];
+
+        const res = await fetch(`${apiBase}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({ model, messages, temperature: 0.8 })
+        });
+
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+
+        const aiContent = data.choices[0].message.content.trim();
+        const aiMsg = { role: 'assistant', content: aiContent, time: Date.now() };
+        window.chatRecords[window.currentChatId].push(aiMsg);
+        saveConfig({ chatRecords: window.chatRecords });
+        renderChatMessage();
+
+      } catch (err) {
+        alert('AI回复失败：' + err.message);
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', e => e.key === 'Enter' && sendMessage());
+
+    // ====================== 朋友圈功能 ======================
+    const addMomentBtn = document.getElementById('add-moment-btn');
+    const addMomentModal = document.getElementById('add-moment-modal');
+    const closeMomentModal = document.getElementById('close-moment-modal');
+    const saveMomentBtn = document.getElementById('save-moment-btn');
+    const backMoment = document.getElementById('back-moment');
+
+    backMoment.addEventListener('click', () => {
+      document.querySelector('[data-tab="chat-list-tab"]').click();
+    });
+
+    addMomentBtn.addEventListener('click', () => addMomentModal.classList.remove('hidden'));
+    closeMomentModal.addEventListener('click', () => {
+      addMomentModal.classList.add('hidden');
+      document.getElementById('moment-content').value = '';
+    });
+
+    saveMomentBtn.addEventListener('click', () => {
+      const content = document.getElementById('moment-content').value.trim();
+      if (!content) {
+        alert('Please enter content');
+        return;
+      }
+
+      const newMoment = {
+        id: 'moment_' + Date.now(),
+        userId: 'me',
+        userName: 'Me',
+        userAvatar: 'https://picsum.photos/200/200?random=me',
+        content,
+        time: Date.now(),
+        likes: [],
+        comments: []
+      };
+
+      window.moments.unshift(newMoment);
+      saveConfig({ moments: window.moments });
+      renderMomentList();
+      closeMomentModal.click();
+    });
+
+    function renderMomentList() {
+      const el = document.getElementById('moment-list');
+      el.innerHTML = '';
+      const isDark = !document.documentElement.classList.contains('dark');
+
+      const sorted = window.moments.sort((a, b) => b.time - a.time);
+
+      sorted.forEach(moment => {
+        const item = document.createElement('div');
+        item.className = 'py-4 border-b border-lumina-800 dark:border-lumina-200 theme-transition';
+        item.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full overflow-hidden bg-lumina-800 dark:bg-lumina-200 flex-shrink-0 theme-transition">
+              <img src="${moment.userAvatar}" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1">
+              <h4 class="text-base font-medium text-white dark:text-lumina-950 theme-transition">${moment.userName}</h4>
+              <p class="text-sm text-white dark:text-lumina-950 mt-1 whitespace-pre-wrap theme-transition">${moment.content}</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs text-lumina-400 dark:text-lumina-500 theme-transition">${formatTime(moment.time)}</span>
+                <div class="flex items-center gap-4">
+                  <button class="like-btn text-xs text-lumina-400 dark:text-lumina-500 flex items-center gap-1 theme-transition" data-id="${moment.id}">
+                    <i class="ri-heart-line ${moment.likes.includes('me') ? 'fill text-red-500' : ''}"></i>
+                    <span>${moment.likes.length}</span>
+                  </button>
+                  <button class="comment-btn text-xs text-lumina-400 dark:text-lumina-500 flex items-center gap-1 theme-transition" data-id="${moment.id}">
+                    <i class="ri-chat-1-line"></i>
+                    <span>${moment.comments.length}</span>
+                  </button>
+                </div>
+              </div>
+              ${moment.comments.length > 0 ? `
+                <div class="mt-2 bg-lumina-900 dark:bg-lumina-100 rounded-lg p-2 theme-transition">
+                  ${moment.comments.map(comment => `
+                    <div class="py-1 text-sm">
+                      <span class="font-medium text-white dark:text-lumina-950 theme-transition">${comment.userName}：</span>
+                      <span class="text-lumina-300 dark:text-lumina-600 theme-transition">${comment.content}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+
+        item.querySelector('.like-btn').addEventListener('click', e => {
+          const id = e.currentTarget.getAttribute('data-id');
+          const m = window.moments.find(item => item.id === id);
+          
+          m.likes.includes('me') ? m.likes = m.likes.filter(i => i !== 'me') : m.likes.push('me');
+          saveConfig({ moments: window.moments });
+          renderMomentList();
+        });
+
+        item.querySelector('.comment-btn').addEventListener('click', e => {
+          const id = e.currentTarget.getAttribute('data-id');
+          const comment = prompt('Enter your comment');
+          if (!comment) return;
+
+          const m = window.moments.find(item => item.id === id);
+          m.comments.push({
+            id: 'comment_' + Date.now(),
+            userId: 'me',
+            userName: 'Me',
+            content: comment,
+            time: Date.now()
+          });
+
+          saveConfig({ moments: window.moments });
+          renderMomentList();
+        });
+
+        el.appendChild(item);
+      });
+    }
+
+    // ====================== 新增：编辑人物弹窗逻辑 ======================
+    const editTrigger = document.getElementById('edit-character-trigger');
+    const editModal = document.getElementById('edit-character-modal');
+    const closeEditModal = document.getElementById('close-edit-modal');
+    const saveEditBtn = document.getElementById('save-edit-character');
+    const deleteBtn = document.getElementById('delete-character-btn');
+    const editName = document.getElementById('edit-character-name');
+    const editSign = document.getElementById('edit-character-sign');
+    const editPrompt = document.getElementById('edit-character-prompt');
+
+    // 打开编辑弹窗并填充当前人物信息
+    editTrigger.addEventListener('click', () => {
+      if (!window.currentCharacter) return;
+      
+      // 填充当前数据
+      editName.value = window.currentCharacter.name;
+      editSign.value = window.currentCharacter.sign;
+      editPrompt.value = window.currentCharacter.prompt;
+      
+      // 重置临时头像并显示当前头像
+      window.tempEditAvatar = null;
+      editAvatarPreview.innerHTML = `<img src="${window.currentCharacter.avatar}" class="w-full h-full object-cover">`;
+      
+      editModal.classList.remove('hidden');
+    });
+
+    // 关闭弹窗
+    closeEditModal.addEventListener('click', () => {
+      editModal.classList.add('hidden');
+    });
+
+    // 保存修改
+    saveEditBtn.addEventListener('click', () => {
+      if (!window.currentCharacter) return;
+      
+      const newName = editName.value.trim();
+      const newSign = editSign.value.trim();
+      const newPrompt = editPrompt.value.trim();
+      
+      if (!newName || !newPrompt) {
+        alert('姓名和人物设定不能为空');
+        return;
+      }
+      
+      // 更新当前人物对象
+      window.currentCharacter.name = newName;
+      window.currentCharacter.sign = newSign || '保持真实';
+      window.currentCharacter.prompt = newPrompt;
+      if (window.tempEditAvatar) {
+        window.currentCharacter.avatar = window.tempEditAvatar;
+      }
+      
+      // 更新characterList中的对应项
+      const index = window.characterList.findIndex(c => c.id === window.currentCharacter.id);
+      if (index !== -1) {
+        window.characterList[index] = { ...window.currentCharacter };
+      }
+      
+      // 更新聊天详情页标题
+      document.getElementById('chat-character-name').textContent = newName;
+      
+      // 重新渲染相关列表
+      renderCharacterList();
+      renderChatList();
+      
+      // 保存到本地存储
+      saveConfig({ characters: window.characterList });
+      
+      // 关闭弹窗
+      editModal.classList.add('hidden');
+    });
+
+    // 删除联系人
+    deleteBtn.addEventListener('click', () => {
+      if (!window.currentCharacter) return;
+      
+      if (confirm(`确定要删除联系人“${window.currentCharacter.name}”及其所有聊天记录吗？`)) {
+        const charId = window.currentCharacter.id;
+        
+        // 从characterList中移除
+        window.characterList = window.characterList.filter(c => c.id !== charId);
+        
+        // 删除对应的聊天记录
+        delete window.chatRecords[charId];
+        
+        // 保存到本地
+        saveConfig({ characters: window.characterList, chatRecords: window.chatRecords });
+        
+        // 重新渲染列表
+        renderCharacterList();
+        renderChatList();
+        
+        // 关闭弹窗并返回上一级（聊天主页面）
+        editModal.classList.add('hidden');
+        document.getElementById('chat-detail').classList.add('translate-x-full');
+        window.currentChatId = null;
+        window.currentCharacter = null;
+      }
+    });
+
+    // 点击空白处关闭弹窗（可选）
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) {
+        editModal.classList.add('hidden');
+      }
+    });
+
+    // ====================== 页面初始化 ======================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadConfig();
+      if (window.characterList.length === 0) {
+        const defaultChar = {
+          id: 'char_default',
+          name: 'Lumina',
+          sign: '你的AI伙伴',
+          prompt: '你是一个温暖聪明的AI伙伴，友好、善于聊天，总是乐于帮助和闲聊，说话像真人一样自然。',
+          avatar: 'https://picsum.photos/200/200?random=lumina',
+          createTime: Date.now()
+        };
+        window.characterList.push(defaultChar);
+        window.chatRecords['char_default'] = [
+          { role: 'assistant', content: '嗨！我是Lumina，你的AI伙伴，今天有什么想聊的吗？', time: Date.now() }
+        ];
+        saveConfig({ characters: window.characterList, chatRecords: window.chatRecords });
+        renderCharacterList();
+        renderChatList();
+      }
+    });
+  </script>
+</body>
+</html>
